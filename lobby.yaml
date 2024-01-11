@@ -1,0 +1,14 @@
+lobby:
+  addr: :8081
+  lobby_id: 11
+  lua_start: "./testLuaLobby/init.lua"
+
+redis:
+  addr: localhost:6379
+  username: default
+  password: ""
+  db: 0
+
+model: debug
+
+log: info
