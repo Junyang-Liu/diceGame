@@ -43,6 +43,26 @@ func InitHttpServer() error {
 
 		})
 
+		lobbyMux.HandleFunc("/dice_lobby", func(w http.ResponseWriter, r *http.Request) {
+
+			utils.Logger.Debugf("RemoteAddr:%s", r.RemoteAddr)
+
+			conn, err := upgrader.Upgrade(w, r, nil)
+			if err != nil {
+				utils.Logger.Errorf(err.Error())
+				conn.Close()
+				return
+			}
+
+			conn.SetCloseHandler(func(code int, text string) error {
+				utils.Logger.Infof("game socket offline code:%d, text:%s", code, text)
+				return nil
+			})
+
+			RecvMsg(conn)
+
+		})
+
 		go http.ListenAndServe(LobbyServerAddr, handlers.LoggingHandler(os.Stdout, lobbyMux))
 	}
 

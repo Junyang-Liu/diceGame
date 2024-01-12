@@ -55,6 +55,7 @@ Player = {
 local function New(room, uid, WS) 
 	local ret = {
         id = uid,
+        uid = uid,
         __WS = WS
     }
 	setmetatable(ret, {__index = Player})

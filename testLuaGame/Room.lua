@@ -2,9 +2,9 @@
 local json = require("json")
 local POKER = require("testLuaGame.poker")
 
-function Room:PlayerIn(Player)
+function Room:PlayerIn(player)
 
-	Room:PlayerSeatDown(Player)
+	Room:PlayerSeatDown(player)
 end
 
 local seatMod = require("testLuaGame.Seat")
@@ -331,7 +331,7 @@ end
 
 function Room:FinishGame()
 	self:BroadCast("sys", {msg = "game finish"})
-	local result = [[{"msg":"nothing result"}]]
+	local result = [[{"result":"nothing result"}]]
 	lobby.EndPlay(result)
 end
 

@@ -205,6 +205,7 @@ func UserSend(L *lua.LState) int {
 func UserOut(L *lua.LState) int {
 	utils.Logger.Debugf("UserOut")
 	uid := L.ToInt(1)
+	L.Pop(1)
 
 	ClearUser(uid)
 

@@ -42,7 +42,8 @@ func InitClientToLobby() {
 		}
 	}()
 
-	msg := &LobbyMsg{FastLabel: EnumNewGameServer}
+	msg := &LobbyMsg{FastLabel: EnumNewGameServer,
+		Msg: []byte(fmt.Sprintf(`{"game_addr":"%s/dice"}`, config.CFG.Server.Addr))}
 	SentToLobby(msg)
 
 }
@@ -163,6 +164,7 @@ func GameEndPlayToLobby(L *lua.LState) int {
 	if result == "" {
 		utils.Logger.Warn("GameEndPlayToLobby result len 0")
 	}
+	L.Pop(1)
 
 	ret := L.GetGlobal("__THIS_ROOM_ID")
 	L.Push(ret)

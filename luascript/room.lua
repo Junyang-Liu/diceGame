@@ -15,11 +15,11 @@ local function addPlayer(self, uId, WS)
 	return self.__players[uId], first
 end
 
-local function PlayerIn(self, uid)
-	print("PlayerIn Room id:", self.id,  "uid:", uid)
+local function PlayerIn(self, player)
+	print("PlayerIn Room id:", self.id,  "uid:", player.uid)
     print("this is test, got to rewrite Room:PlayerIn function!")
-	local timer = __NewTimer(1000, broadcast, self, "fromInGame", { msg="this id test timer msg! player " .. (uid and uid or "nil") .. " get in this room "..  (self and self.id or "nil")})
-	__NewTimer(2000, broadcast, self, "fromInGame", { msg="this id test timer msg! player " .. (uid and uid or "nil") .. " get in this room "..  (self and self.id or "nil")})
+	local timer = __NewTimer(1000, broadcast, self, "fromInGame", { msg="this id test timer msg! player " .. (player.uid and player.uid or "nil") .. " get in this room "..  (self and self.id or "nil")})
+	__NewTimer(2000, broadcast, self, "fromInGame", { msg="this id test timer msg! player " .. (player.uid and player.uid or "nil") .. " get in this room "..  (self and self.id or "nil")})
 	__CancelTimer(timer)
 
 end

@@ -56,16 +56,17 @@ func setLuaVmGoStack(L *lua.LState, isLobbyServer bool) {
 	L.SetField(goStack, "CancelTimer", L.NewFunction(CancelTimer))
 	L.SetField(goStack, "TimerLastTime", L.NewFunction(TimerLastTime))
 	L.SetField(goStack, "closeVM", L.NewFunction(closeVM))
-	L.SetGlobal(GO_STACK_NAME, goStack)
 
 	if isLobbyServer {
-
+		L.SetField(goStack, "GameServerSent", L.NewFunction(GameServerSent))
 	} else {
 		lobbyStack := L.NewTypeMetatable(LOBBY_STACK_NAME)
 		L.SetField(lobbyStack, "StartPlay", L.NewFunction(GameStarPlayToLobby))
 		L.SetField(lobbyStack, "EndPlay", L.NewFunction(GameEndPlayToLobby))
 		L.SetGlobal(LOBBY_STACK_NAME, lobbyStack)
 	}
+
+	L.SetGlobal(GO_STACK_NAME, goStack)
 }
 
 func setLuaVmGameGlobal(L *lua.LState) {
@@ -99,13 +100,16 @@ func CallLua(L *lua.LState, uid int, luaFunc, str1 string, data *lua.LTable) err
 	return nil
 }
 
-func LobbyCallLua(L *lua.LState, fName string) error {
-	utils.Logger.Debugf("LobbyCallLua!!! fName%s", fName)
+func LobbyCallLua(L *lua.LState, fName string, data *lua.LTable) error {
+	utils.Logger.Debugf("LobbyCallLua!!! fName: %s data: %v", fName, *data)
+
+	room := L.GetGlobal("Room")
+	f := L.GetField(room, fName)
 	if err := L.CallByParam(lua.P{
-		Fn:      L.GetGlobal(fName),
+		Fn:      f,
 		NRet:    1,
 		Protect: true,
-	}); err != nil {
+	}, room, data); err != nil {
 		utils.Logger.Errorf(err.Error())
 		return err
 	}

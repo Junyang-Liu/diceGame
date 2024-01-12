@@ -9,6 +9,7 @@ import (
 	"time"
 
 	rbtMod "github.com/HuKeping/rbtree"
+	"github.com/gorilla/websocket"
 	lua "github.com/yuin/gopher-lua"
 )
 
@@ -133,7 +134,20 @@ func RunMsgs(runVm *VmRunMsg) {
 				callData := utils.MapToTable(data.(map[string]interface{}))
 				CallLua(L, *uid, "playerOP", *op, callData)
 			} else {
-				LobbyCallLua(L, *runMsg.op)
+				if runMsg.data != nil {
+					data := *runMsg.data
+					dataMap := data.(map[string]interface{})
+					callData := L.NewTable()
+					callData.RawSet(lua.LString("addr"), lua.LString(dataMap["addr"].(string)))
+					callData.RawSet(lua.LString("message"), lua.LString(dataMap["message"].(string)))
+					ws := dataMap["conn"].(*websocket.Conn)
+					__WS := L.NewUserData()
+					__WS.Value = ws
+					callData.RawSet(lua.LString("__WS"), __WS)
+					LobbyCallLua(L, *runMsg.op, callData)
+				} else {
+					LobbyCallLua(L, *runMsg.op, nil)
+				}
 			}
 		} else {
 			utils.Logger.Error("RunMsgs L nil")

@@ -23,6 +23,10 @@ func main() {
 		return
 	}
 
+	if config.CFG.Lobby.Addr != "" {
+		server.InitLobbyRoom()
+	}
+
 	server.InitHttpServer()
 	server.InitMsgServer()
 
