@@ -75,7 +75,7 @@ func DoLobbyMsg(message []byte) {
 		return
 	}
 
-	if msg.FastLabel == EnumNewGameServer {
+	if msg.FastLabel == EnumNewGameRoom {
 		info := map[string]int{}
 		if err := json.Unmarshal([]byte(msg.Msg), &info); err != nil {
 			utils.Logger.Errorf("DoLobbyMsg err:%s", err.Error())
@@ -88,11 +88,10 @@ func DoLobbyMsg(message []byte) {
 		}
 
 		if msg.RoomId == 0 {
-			utils.Logger.Errorf("DoLobbyMsg NewGameRoom get 0 RoomId")
-			return
+			utils.Logger.Warn("DoLobbyMsg NewGameRoom get 0 RoomId, game server create a RoomId")
 		}
 		ret := NewGameVm(uid, msg.RoomId, false)
-		retMsg := &LobbyMsg{RoomId: ret, FastLabel: EnumNewGameRoom}
+		retMsg := &LobbyMsg{RoomId: ret, FastLabel: EnumNewGameRoom, Msg: []byte(fmt.Sprintf(`{"uid":%d}`, uid))}
 
 		SentToLobby(retMsg)
 		return

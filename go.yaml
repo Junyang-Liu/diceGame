@@ -9,4 +9,4 @@ msg_max_main: 100000
 
 model: debug
 
-log: info
+log: debug

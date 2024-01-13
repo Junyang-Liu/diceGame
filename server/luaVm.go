@@ -56,6 +56,7 @@ func setLuaVmGoStack(L *lua.LState, isLobbyServer bool) {
 	L.SetField(goStack, "CancelTimer", L.NewFunction(CancelTimer))
 	L.SetField(goStack, "TimerLastTime", L.NewFunction(TimerLastTime))
 	L.SetField(goStack, "closeVM", L.NewFunction(closeVM))
+	L.SetField(goStack, "closeWS", L.NewFunction(closeWS))
 
 	if isLobbyServer {
 		L.SetField(goStack, "GameServerSent", L.NewFunction(GameServerSent))
@@ -321,7 +322,7 @@ func NewTimer(L *lua.LState) int {
 	utils.Logger.Debugf(fmt.Sprintf("mills: %d", mills))
 
 	lf := L.ToFunction(2)
-	utils.Logger.Debugf(fmt.Sprintf("lf: %v", *lf))
+	utils.Logger.Debugf(fmt.Sprintf("lf: %s", lf.String()))
 
 	utils.Logger.Debugf(fmt.Sprintf("args: %d", args))
 

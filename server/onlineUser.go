@@ -42,6 +42,7 @@ func SetOnlineUser(user *OnLineUser) {
 		utils.Logger.Warnf("exist user %d, update it", u.Uid)
 		u.ImgUrl = user.ImgUrl
 		u.Name = user.Name
+		// u.RoomId = user.RoomId
 		return
 	}
 	_OnLine[user.Uid] = user
@@ -72,7 +73,7 @@ func ClearUser(uid int) {
 }
 
 func UserOffLine(remoteAddr string) {
-
+	utils.Logger.Debugf("UserOffLine remoteAddr:%s", remoteAddr)
 	uid := GetOnLineUID(remoteAddr)
 	if uid == 0 {
 		utils.Logger.Errorf("GetOnLineUID uid = 0! remoteAddr:%s", remoteAddr)
@@ -226,5 +227,17 @@ func closeVM(L *lua.LState) int {
 	utils.Logger.Debugf("roomId %d", roomId)
 	L.Pop(1)
 	CloseOneRunQue(roomId)
+	return 0
+}
+
+func closeWS(L *lua.LState) int {
+	utils.Logger.Debugf("closeWS")
+	WS := L.ToUserData(1)
+	conn := WS.Value.(*websocket.Conn)
+	if conn == nil {
+		utils.Logger.Errorf("WS nil")
+		return 0
+	}
+	UserOffLine(conn.RemoteAddr().String())
 	return 0
 }

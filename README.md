@@ -10,6 +10,7 @@ Check here for [how it works](#how-it-works)
     - [**`Room Destroy`** Room:destroy()](#room-destroy-roomdestroy)
     - [**`Player Entry`** Room:PlayerIn(player)](#player-entry-roomplayerinplayer)
     - [**`Player Clear`** Room:PlayerOut(player.id)](#player-clear-roomplayeroutplayerid)
+    - [**`Player Offline`** Player:Offline()](#player-offline-playeroffline)
     - [**`Player Request`** Player:OP(line, data)](#player-request-playeropline-data)
     - [**`Player Response`** Player:Send(line, data)](#player-response-playersendline-data)
     - [**`Timer Create`** Room:NewTimer(Millisecond, function, ...)](#timer-create-roomnewtimermillisecond-function-)
@@ -51,6 +52,9 @@ Function `Room:PlayerIn(player)` will be call when a new player entry this room.
 
 #### **`Player Clear`** Room:PlayerOut(player.id)
 Function `Room:PlayerOut(player.id)` for clearing a player, will remove the player's data in game engine, including the socket connect, user info cache.
+
+#### **`Player Offline`** Player:Offline()
+Function `Player:Offline()` for closing a player socket connect.
 
 #### **`Player Request`** Player:OP(line, data)
 Function `Player:OP(line, data)` will be call when a player game request receive. Arg line for the game protocol; Arg data for the request data.

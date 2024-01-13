@@ -49,5 +49,27 @@ func DoGameServerMsg(conn *websocket.Conn, addr string, message []byte) {
 }
 
 func GameServerSent(L *lua.LState) int {
+
+	utils.Logger.Debugf("GameServerSent")
+	args := L.GetTop()
+	if args != 2 {
+		utils.Logger.Errorf("need 2 args")
+		return 0
+	}
+	WS := L.ToUserData(1)
+	conn := WS.Value.(*websocket.Conn)
+	if conn == nil {
+		utils.Logger.Errorf("WS nil")
+		return 0
+	}
+
+	msg := L.ToString(2)
+	utils.Logger.Debugf(fmt.Sprintf("msg: %s", msg))
+
+	err := conn.WriteMessage(websocket.TextMessage, []byte(msg))
+	if err != nil {
+		utils.Logger.Errorf(err.Error())
+		return 0
+	}
 	return 0
 }

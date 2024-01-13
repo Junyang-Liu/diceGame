@@ -8,6 +8,8 @@ __CancelTimer = go.CancelTimer
 __TimerLastTime = go.TimerLastTime
 __PlayerOut = go.userOut
 __CloseThisVm = go.closeVM
+__CloseWS = go.closeWS
+GameServerSent = go.GameServerSent
 Room = nil
 G_ROOM_ID = nil
 

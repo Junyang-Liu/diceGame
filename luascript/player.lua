@@ -1,8 +1,15 @@
 
 local json = require("json")
 local function send(self, line, data)
-    local str = json.encode(data)
-    go.send(self.__WS, line, str)
+    local str
+    if type(data) == "string" then
+        str = data
+    else
+        str = json.encode(data)
+    end
+    if self.__WS then
+        go.send(self.__WS, line, str)
+    end
 end
 
 local function OP(self, line, data)
@@ -11,7 +18,9 @@ local function OP(self, line, data)
     data.msg = "this is test msg"
 
     local str = json.encode(data)
-    go.send(self.__WS, line, str)
+    if self.__WS then
+        go.send(self.__WS, line, str)
+    end
 end
 
 local function NewTimer(self, ...)
@@ -38,6 +47,12 @@ local function TimerLast( self )
     end
 end
 
+local function Offline(self)
+    if self.__WS then
+        __CloseWS(self.__WS)
+        self.__WS = nil
+    end
+end
 
 Player = {
         -- data
@@ -50,6 +65,7 @@ Player = {
         ExistTimer = ExistTimer,
         CancelTimer = CancelTimer,
         TimerLast = TimerLast,
+        Offline = Offline,
 }
 
 local function New(room, uid, WS) 
