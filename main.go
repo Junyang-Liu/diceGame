@@ -3,6 +3,7 @@ package main
 import (
 	"diceGame/config"
 	"diceGame/db"
+	dcserver "diceGame/dcserver"
 	"diceGame/server"
 	"diceGame/utils"
 	"flag"
@@ -22,9 +23,18 @@ func main() {
 		utils.Logger.Errorf(err.Error())
 		return
 	}
+	err = db.InitMysql()
+	if err != nil {
+		utils.Logger.Errorf(err.Error())
+		return
+	}
 
 	if config.CFG.Lobby.Addr != "" {
 		server.InitLobbyRoom()
+	}
+
+	if config.CFG.DC.Addr != "" {
+		dcserver.InitServer()
 	}
 
 	server.InitHttpServer()

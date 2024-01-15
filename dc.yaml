@@ -1,0 +1,14 @@
+dc:
+  addr: :8082
+  secret: dcsecret
+
+mysql:
+  debug: true
+  addr: localhost:3306
+  username: root
+  password: password
+  db: dc
+
+model: debug
+
+log: debug

@@ -125,7 +125,7 @@ redis:                              # engine redis client config
     password: ""                        # password
     db: 0                               # db
 
-lua:                                # run lua a file when a new game was created by engine
+lua:                                # run lua a file when engine start
     start: "./testLuaLobby/init.lua"     # lua file path to run
 
 model: debug                        # engine run model, create a user when a login request receive,
@@ -139,3 +139,67 @@ log: info                           # engine log level
 
 
 ## How it works
+
+```mermaid
+---
+title: diceGame works sequence
+---
+sequenceDiagram
+    actor U as user
+    participant D as DC
+    participant L as Lobby
+    participant G as Game ID 11 (priority 1)
+    participant GL as Game ID 11 (priority 0)
+
+    rect rgb(200, 150, 255)
+        note right of L: Game Server Connect to Lobby
+        G->>L: id addr priority
+        GL->>L: id addr priority
+    end
+
+    rect rgb(200, 150, 255)
+        note right of U: user login to Lobby server
+        U->>D: Login(u_id)
+        D->>U: Sent(lobby_token)
+        U->>L: Login(u_id, lobby_token)
+        L->>U: Sent(all_game_ids)
+    end
+
+    rect rgb(200, 150, 255)
+        note right of U: user want a game
+        U->>L: Create_Room(game_id = 11)
+        L->>L: choose a game server by priority
+        L->>G: Create_Room(room_id, u_id)
+        G->>L: Create_Room_Success(room_id, u_id)
+        L->>U: Create_Room_Success(room_id)
+    end
+
+    rect rgb(200, 150, 255)
+        note right of U: user play games
+        U->>L: Enter_Room(room_id)
+        L->>G: Sent_User(user_info)
+        L->>U: Enter_Room_Success(room_id, addr, game_token)
+
+        rect rgb(100, 150, 255)
+            note right of U: user in game room
+            U->>G: Login(u_id, game_token)
+            U->>G: Start_Play()
+            G->>L: Room_Start(room_id)
+            loop GAME ROOM
+                U->>G: Playing()
+                G->>U: Playing(game_result)
+            end
+            G->>U: End_Playing()
+        end
+        G->>L: Room_End(room_id, game_result)
+    end
+    rect rgb(200, 150, 255)
+        note right of D: game billing
+        L->>D: Billing(game_result)
+    end
+    rect rgb(200, 150, 255)
+        note right of U: user check games records
+        U->>L: Game_History_Result()
+        L->>U: Game_History_Result(game_results)
+    end
+```

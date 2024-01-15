@@ -17,12 +17,17 @@ var ctx = context.Background()
 func initRedisClient() error {
 	fmt.Println("initRedisClient")
 
-	rdb := redis.NewClient(&redis.Options{
+	opt := redis.Options{
 		Addr:     config.CFG.Redis.Addr,
 		Password: config.CFG.Redis.Password,
 		Username: config.CFG.Redis.UserName,
 		DB:       config.CFG.Redis.DB,
-	})
+	}
+	if config.CFG.Redis.PoolSize != 0 {
+		opt.PoolSize = config.CFG.Redis.PoolSize
+	}
+
+	rdb := redis.NewClient(&opt)
 
 	_, err := rdb.Ping(ctx).Result()
 	if err != nil {

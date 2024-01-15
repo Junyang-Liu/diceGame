@@ -8,6 +8,9 @@ lobby:
 #   username: default
 #   password: ""
 #   db: 0
+#   poolsize:10
+
+msg_max_main: 100000
 
 model: debug
 

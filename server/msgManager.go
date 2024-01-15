@@ -116,7 +116,10 @@ func MsgCache(user *OnLineUser, msg *Msg) {
 }
 
 func InitMsgServer() {
-
+	if config.CFG.Lobby.Addr == "" && config.CFG.Server.Addr == "" {
+		utils.Logger.Warn("will not InitMsgServer")
+		return
+	}
 	var max = 100000
 	if config.CFG.MsgMaxMain != 0 {
 		max = config.CFG.MsgMaxMain

@@ -23,12 +23,26 @@ type Congfig struct {
 		LuaStart string `yaml:"lua_start"`
 	} `yaml:"lobby"`
 
+	DC struct {
+		Addr   string `yaml:"addr"`
+		Secret string `yaml:"secret"`
+	} `yaml:"dc"`
+
 	Redis struct {
 		Addr     string `yaml:"addr"`
 		UserName string `yaml:"username"`
 		Password string `yaml:"password"`
 		DB       int    `yaml:"db"`
+		PoolSize int    `yaml:"poolsize"`
 	} `yaml:"redis"`
+
+	Mysql struct {
+		Addr     string `yaml:"addr"`
+		UserName string `yaml:"username"`
+		Password string `yaml:"password"`
+		DB       string `yaml:"db"`
+		PoolSize int    `yaml:"poolsize"`
+	} `yaml:"mysql"`
 
 	Model string `yaml:"model"`
 
