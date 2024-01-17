@@ -4,9 +4,13 @@ import (
 	"diceGame/config"
 	"diceGame/utils"
 	"fmt"
+	"log"
+
+	"os"
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 var MysqlConn *gorm.DB
@@ -24,7 +28,9 @@ func InitMysql() error {
 	)
 	utils.Logger.Debug(u)
 
-	db, err := gorm.Open(mysql.Open(u), &gorm.Config{})
+	newLogger := logger.New(log.New(os.Stdout, "\r\n", log.LstdFlags), logger.Config{})
+
+	db, err := gorm.Open(mysql.Open(u), &gorm.Config{Logger: newLogger})
 	if err != nil {
 		utils.Logger.Error(err)
 		return err

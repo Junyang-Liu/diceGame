@@ -3,8 +3,8 @@ package dcserver
 import "gorm.io/gorm"
 
 type Lobby struct {
-	Id    int `gorm:"primary_key"`
-	Token int `gorm:"token"`
+	Id    int    `gorm:"primary_key"`
+	Token string `gorm:"token"`
 }
 
 func (Lobby) TableName() string {

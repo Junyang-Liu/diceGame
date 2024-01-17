@@ -3,9 +3,9 @@ package dcserver
 import "gorm.io/gorm"
 
 type User struct {
-	Id    int    `gorm:"primary_key"`
-	Name  string `gorm:"name"`
-	Coins int    `gorm:"coins"`
+	Id     int    `gorm:"primary_key" json:"uid"`
+	Name   string `gorm:"name" json:"name"`
+	ImgUrl string `gorm:"img" json:"img"`
 }
 
 func (User) TableName() string {

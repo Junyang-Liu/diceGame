@@ -28,6 +28,8 @@ Check here for [how it works](#how-it-works)
     - [lobby server](#lobby-server)
     - [data center server](#data-center-server)
 - [How it works](#how-it-works)
+    - [How do `Room` works with a player request](#how-do-room-works-with-a-player-request)
+    - [SequenceDiagram for the whole things](#sequencediagram-for-the-whole-things)
 
 
 ## Build And Run
@@ -135,18 +137,49 @@ log: info                           # engine log level
 
 #### data center server
 ```yml
+
 ```
 
 
 ## How it works
+#### How do `Room` works with a player request
+A room_id was bind with a socket connect when player login the server. It will be cache by a go channel when a socket message was ready, and dispatching to each room msg_list by room_id.
+```mermaid
+---
+title: message flow
+---
+stateDiagram
+    direction LR
+    player1 --> read
+    note right of player1: room1
+    player2 --> read
+    note right of player2: room2
+    player... --> read
+    note right of player...: room...
+    read --> channel
+    state channel {
+      message_1
+      message_2
+      message_...
+      
+    }
+    channel --> dispatching_by_roomID
+    dispatching_by_roomID --> room1_msg_list
+    dispatching_by_roomID --> room2_msg_list
+    dispatching_by_roomID --> room..._msg_list
+    room1_msg_list --> room1
+    room2_msg_list --> room2
+    room..._msg_list --> room...
+```
 
+#### SequenceDiagram for the whole things
 ```mermaid
 ---
 title: diceGame works sequence
 ---
 sequenceDiagram
     actor U as user
-    participant D as DC
+    %% participant D as DC
     participant L as Lobby
     participant G as Game ID 11 (priority 1)
     participant GL as Game ID 11 (priority 0)
@@ -159,8 +192,8 @@ sequenceDiagram
 
     rect rgb(200, 150, 255)
         note right of U: user login to Lobby server
-        U->>D: Login(u_id)
-        D->>U: Sent(lobby_token)
+        %% U->>D: Login(u_id)
+        %% D->>U: Sent(lobby_token)
         U->>L: Login(u_id, lobby_token)
         L->>U: Sent(all_game_ids)
     end
@@ -193,10 +226,10 @@ sequenceDiagram
         end
         G->>L: Room_End(room_id, game_result)
     end
-    rect rgb(200, 150, 255)
-        note right of D: game billing
-        L->>D: Billing(game_result)
-    end
+    %% rect rgb(200, 150, 255)
+    %%     note right of D: game billing
+    %%     L->>D: Billing(game_result)
+    %% end
     rect rgb(200, 150, 255)
         note right of U: user check games records
         U->>L: Game_History_Result()

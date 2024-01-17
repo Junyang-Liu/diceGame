@@ -20,13 +20,38 @@ var DcGIN *gin.Engine
 func InitServer() {
 	initModels()
 	initDcHttpServer()
+	if config.CFG.Model == "debug" {
+		initSomeTestData()
+	}
+}
+func initSomeTestData() {
+	utils.Logger.Debug("initSomeTestData")
+	uid := 1000000
+	for {
+		uid++
+		utils.Logger.Debugf("uid:%d", uid)
+		err := db.MysqlConn.FirstOrCreate(&User{Id: uid}).Error
+		if err != nil {
+			utils.Logger.Warn(err)
+		}
+		if uid == 1000010 {
+			break
+		}
+	}
+	err := db.MysqlConn.FirstOrCreate(&Lobby{Id: 11}).Error
+	if err != nil {
+		utils.Logger.Warn(err)
+	}
 }
 
 func initModels() {
-	db.MysqlConn.AutoMigrate(
+	err := db.MysqlConn.AutoMigrate(
 		&User{},
 		&Lobby{},
 	)
+	if err != nil {
+		utils.Logger.Error(err)
+	}
 }
 
 func initDcHttpServer() {
@@ -40,6 +65,7 @@ func initDcHttpServer() {
 		userRouter := groupInternal.Group("/user")
 		{
 			userRouter.GET("/test", userTest)
+			userRouter.GET("/:uid", userGet)
 		}
 	}
 	go ginEN.Run(config.CFG.DC.Addr)
@@ -78,7 +104,6 @@ func internalMiddleware() gin.HandlerFunc {
 			ret := map[string]any{
 				"msg":  "time expire",
 				"code": -1,
-				"err":  err.Error(),
 			}
 			c.JSON(403, ret)
 			c.AbortWithStatus(403)
@@ -105,4 +130,30 @@ func internalMiddleware() gin.HandlerFunc {
 
 func userTest(c *gin.Context) {
 	c.JSON(200, "{}")
+}
+
+func userGet(c *gin.Context) {
+	utils.Logger.Debug("userGet")
+	uid, _ := strconv.Atoi(c.Param("uid"))
+	user := User{Id: uid}
+	err := db.MysqlConn.First(&user).Error
+	if err != nil {
+		utils.Logger.Debug(err)
+		ret := map[string]any{
+			"msg":  "not find one",
+			"err":  err.Error(),
+			"code": -1,
+		}
+		c.JSON(200, ret)
+		return
+	}
+	if user.Id == 0 {
+		ret := map[string]any{
+			"msg":  "not find one",
+			"code": -1,
+		}
+		c.JSON(200, ret)
+		return
+	}
+	c.JSON(200, user)
 }

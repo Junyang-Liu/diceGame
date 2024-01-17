@@ -15,7 +15,7 @@ import (
 
 var LobbyWS *websocket.Conn
 
-func InitClientToLobby() {
+func InitClientToLobby() bool {
 	if config.CFG.Model == "debug" {
 		time.Sleep(500 * time.Millisecond)
 	}
@@ -27,7 +27,7 @@ func InitClientToLobby() {
 
 	if err != nil {
 		log.Println("dial:", err)
-		return
+		return false
 	}
 	LobbyWS = c
 	go func() {
@@ -35,6 +35,7 @@ func InitClientToLobby() {
 			_, message, err := c.ReadMessage()
 			if err != nil {
 				log.Println("read lobby:", err)
+				go ReConnectToLobby()
 				return
 			}
 
@@ -45,7 +46,19 @@ func InitClientToLobby() {
 	msg := &LobbyMsg{FastLabel: EnumNewGameServer,
 		Msg: []byte(fmt.Sprintf(`{"game_addr":"%s/dice"}`, config.CFG.Server.Addr))}
 	SentToLobby(msg)
+	return true
+}
 
+func ReConnectToLobby() {
+	for {
+		utils.Logger.Warn("doing ReConnectToLobby...")
+		if InitClientToLobby() {
+			utils.Logger.Warn("ReConnectToLobby success")
+			return
+		} else {
+			time.Sleep(2000 * time.Millisecond)
+		}
+	}
 }
 
 const (
