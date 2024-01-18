@@ -1,0 +1,12 @@
+server:
+  addr: :8080
+  lobby_addr: localhost:8081
+  game_id: 101
+  priority: 1
+  lua_start: "./testLuaGame/init.lua"
+
+msg_max_main: 100000
+
+model: debug
+
+log: debug
