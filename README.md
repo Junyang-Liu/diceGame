@@ -38,8 +38,9 @@ Check here for [how it works](#how-it-works)
 ## Build And Run
 ```bash
 make build
-./GameEngine -c ./go.yaml
+./GameEngine -c ./dc.yaml & ./GameEngine -c ./lobby.yaml & ./GameEngine -c ./go.yaml
 ```
+Flow the [testGo/lobbyclient.go](./testGo/lobbyclient.go), it shows how to login lobby and create a game, enter a game room. Here are example [`Lua lobby server project`](./testLuaLobby/init.lua) and [`Lua game server project`](./testLuaGame/init.lua)
 
 
 ## Lua APIs
@@ -115,9 +116,10 @@ server:                             # game server config
     game_id: 101                        # this game server's id
     priority: 1                         # in same game id, lobby create new room to game server by priority
     lobby_addr: localhost:8081          # lobby server's address
+    lua_start: "./testLuaGame/init.lua" # run lua a file when a new game was created by engine
+                                            # lua file path to run
 
-lua:                                # run lua a file when a new game was created by engine
-    start: "./testLuaGame/init.lua"     # lua file path to run
+msg_max_main: 10000                 # the main channel's size
 
 model: debug                        # engine run model, create a user when a login request receive,
                                         # instead of getting it from the lobby server if it is set to "debug"
@@ -127,17 +129,20 @@ log: info                           # engine log level
 #### lobby server
 ```yml
 lobby:                             # lobby server config
-    addr: :8080                         # listen address
+    addr: :8081                         # listen address
     lobby_id: 11                        # this lobby server's id
+    lua_start: "./testLuaLobby/init.lua" # run lua a file when engine start # lua file path to run
+    dc_addr: localhost:8082             # addr to request a user
+    dc_secret: dcsecret                 # secret for token to connect dc server
 
 redis:                              # engine redis client config
     addr: localhost:6379                # address
     username: default                   # username
     password: ""                        # password
     db: 0                               # db
+    poolsize: 10                        # redis pool size
 
-lua:                                # run lua a file when engine start
-    start: "./testLuaLobby/init.lua"     # lua file path to run
+msg_max_main: 10000                 # the main channel's size
 
 model: debug                        # engine run model, create a user when a login request receive,
                                         # instead of getting it from the data center server if it is set to "debug"
@@ -146,11 +151,11 @@ log: info                           # engine log level
 
 #### data center server
 ```yml
-dc:
-  addr: :8082
-  secret: dcsecret
+dc:                     # dc server config
+  addr: :8082           # listen address
+  secret: dcsecret      # secret for the token
 
-mysql:
+mysql:                  # engine mysql client config
   debug: true
   addr: localhost:3306
   username: root
