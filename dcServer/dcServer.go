@@ -4,11 +4,9 @@ import (
 	"diceGame/config"
 	"diceGame/db"
 	"diceGame/utils"
-	"fmt"
 
 	"github.com/gin-gonic/gin"
 
-	"crypto/md5"
 	"strconv"
 	"time"
 
@@ -26,7 +24,7 @@ func InitServer() {
 }
 func initSomeTestData() {
 	utils.Logger.Debug("initSomeTestData")
-	uid := 1000000
+	uid := 100000
 	for {
 		uid++
 		utils.Logger.Debugf("uid:%d", uid)
@@ -34,7 +32,7 @@ func initSomeTestData() {
 		if err != nil {
 			utils.Logger.Warn(err)
 		}
-		if uid == 1000010 {
+		if uid == 100010 {
 			break
 		}
 	}
@@ -60,7 +58,7 @@ func initDcHttpServer() {
 
 	groupInternal := ginEN.Group("/dc")
 	{
-		groupInternal.Use(internalMiddleware())
+		groupInternal.Use(InternalMiddleware())
 
 		userRouter := groupInternal.Group("/user")
 		{
@@ -71,7 +69,7 @@ func initDcHttpServer() {
 	go ginEN.Run(config.CFG.DC.Addr)
 }
 
-func internalMiddleware() gin.HandlerFunc {
+func InternalMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		s, _ := c.GetQuery("sign")
 		t, _ := c.GetQuery("time")
@@ -111,10 +109,9 @@ func internalMiddleware() gin.HandlerFunc {
 		}
 
 		secret := config.CFG.DC.Secret
-		source := []byte(fmt.Sprintf("/dc%s%s", t, secret))
-		md5Byte := md5.Sum(source)
-		Lutils.Logger.Debugf("s:%s, md5Byte:%x", s, md5Byte[:])
-		if s != fmt.Sprintf("%x", md5Byte[:]) {
+		token := utils.GenToken("/dc", t, secret)
+		Lutils.Logger.Debugf("s:%s, md5Byte:%s", s, token)
+		if s != token {
 			ret := map[string]any{
 				"msg":  "sign not right",
 				"code": -1,

@@ -165,6 +165,21 @@ log: debug
 
 
 ## Token
+Here is the token algorithm
+```go
+
+import (
+	"crypto/md5"
+	"fmt"
+)
+
+func GenToken(path, t, secret string) string {
+	source := []byte(fmt.Sprintf("%s%s%s", path, t, secret))
+	md5Byte := md5.Sum(source)
+	return fmt.Sprintf("%x", md5Byte[:])
+}
+
+```
 
 ## How it works
 #### How do `Room` works with a player request
@@ -243,9 +258,12 @@ sequenceDiagram
             U->>G: Login(u_id, game_token)
             U->>G: Start_Play()
             G->>L: Room_Start(room_id)
-            loop GAME ROOM
-                U->>G: Playing()
-                G->>U: Playing(game_result)
+
+            rect rgb(100, 150, 0)
+                loop GAME ROOM
+                    U->>G: Playing()
+                    G->>U: Playing(game_result)
+                end
             end
             G->>U: End_Playing()
         end

@@ -3,6 +3,7 @@ lobby:
   lobby_id: 11
   lua_start: "./testLuaLobby/init.lua"
   dc_addr: localhost:8082
+  dc_secret: dcsecret
 
 redis:
   addr: localhost:6378

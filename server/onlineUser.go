@@ -6,7 +6,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"net/http"
 	"sync"
+	"time"
 
 	"github.com/gorilla/websocket"
 	lua "github.com/yuin/gopher-lua"
@@ -114,7 +117,20 @@ func UserOnLine(uid int, conn *websocket.Conn) (*OnLineUser, error) {
 		}
 	}
 
+	if config.CFG.Lobby.Addr != "" {
+		if dcUser := RequestDcUser(uid); dcUser != nil {
+			dcUser.Addr = &addr
+			dcUser.WS = conn
+			CacheOnLineUID(dcUser.Uid, conn)
+			_OnLineLock.Lock()
+			_OnLine[uid] = dcUser
+			_OnLineLock.Unlock()
+			return dcUser, nil
+		}
+	}
+
 	if config.CFG.Model == `debug` {
+		utils.Logger.Debug("debug model create a debug user")
 		newOnline := &OnLineUser{Uid: uid, Addr: &addr, WS: conn, ImgUrl: "local.png", Name: fmt.Sprint(uid)}
 		CacheOnLineUID(uid, conn)
 		_OnLineLock.Lock()
@@ -124,6 +140,48 @@ func UserOnLine(uid int, conn *websocket.Conn) (*OnLineUser, error) {
 	}
 
 	return nil, errors.New(fmt.Sprintf("user not cache uid: %d", uid))
+}
+
+func RequestDcUser(uid int) *OnLineUser {
+	addr := config.CFG.Lobby.DcAddr
+	if addr == "" {
+		utils.Logger.Error("RequestDcUser but dcaddr not find")
+		return nil
+	}
+	secret := config.CFG.Lobby.DcSecret
+	if secret == "" {
+		utils.Logger.Warn(`RequestDcUser but secret not find use ""`)
+		return nil
+	}
+	t := time.Now().Add(time.Hour)
+	var timestamp int64 = t.Unix()
+	token := utils.GenToken("/dc", fmt.Sprint(timestamp), secret)
+	reqUrl := fmt.Sprintf("http://%s/dc/user/%d?sign=%s&time=%d", addr, uid, token, timestamp)
+	utils.Logger.Debugf("reqUrl:%s", reqUrl)
+	resp, err := http.Get(reqUrl)
+	if err != nil {
+		utils.Logger.Warn(err)
+		return nil
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		utils.Logger.Warn(err)
+		return nil
+	}
+	utils.Logger.Debugf("body:%s", body[:])
+	user := OnLineUser{}
+	er := json.Unmarshal(body, &user)
+	if er != nil {
+		utils.Logger.Error(er)
+		return nil
+	}
+	if user.Uid != 0 {
+		return &user
+	}
+
+	return nil
 }
 
 func GetOnLineUser(uid int) *OnLineUser {

@@ -22,6 +22,7 @@ type Congfig struct {
 		LobbyId  int    `yaml:"lobby_id"`
 		LuaStart string `yaml:"lua_start"`
 		DcAddr   string `yaml:"dc_addr"`
+		DcSecret string `yaml:"dc_secret"`
 	} `yaml:"lobby"`
 
 	DC struct {

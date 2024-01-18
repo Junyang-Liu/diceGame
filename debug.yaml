@@ -9,12 +9,16 @@ lobby:
   addr: :8081
   lobby_id: 11
   lua_start: "./testLuaLobby/init.lua"
+  dc_addr: localhost:8082
+  dc_secret: dcsecret
 
 redis:
   addr: localhost:6378
   username: default
   password: ""
   db: 0
+  poolsize: 10
+
 msg_max_main: 100000
 
 model: debug
