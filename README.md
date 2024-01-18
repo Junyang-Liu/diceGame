@@ -23,6 +23,8 @@ Check here for [how it works](#how-it-works)
     - [**`Timer Cancel`** Player:CancelTimer()](#timer-cancel-playercanceltimer)
     - [**`lobby StartPlay`** lobby.StartPlay()](#lobby-startplay-lobbystartplay)
     - [**`lobby EndPlay`** lobby.EndPlay(result)](#lobby-endplay-lobbyendplayresult)
+    - [**`Redis Get`** rdb.Get(key)](#redis-get-rdbgetkey)
+    - [**`Redis Set`** rdb.Set(key, val)](#redis-set-rdbsetkey-val)
 - [Configure](#configure)
     - [game server](#game-server)
     - [lobby server](#lobby-server)
@@ -96,6 +98,12 @@ Function `lobby.StartPlay()` to notice the lobby server this `Room` is start gam
 
 #### **`lobby EndPlay`** lobby.EndPlay(result)
 Function `lobby.EndPlay(result)` to notice the lobby server this `Room` is finish gaming, and send json string `result` to lobby. Only works in game server.
+
+#### **`Redis Get`** rdb.Get(key)
+Function `rdb.Get(key)` to get val from redis, string `key` for the redis key, return `val, err`. `val` maybe a string when `err` return nil for a success calling, or lua nil when `err` return a string for a fail calling. Only works in lobby server.
+
+#### **`Redis Set`** rdb.Set(key, val)
+Function `rdb.Set(key, val)` to set val to redis, string `key` for the redis key, string `val` for the redis val, return `val, err`. `val` maybe a string "ok" when `err` return nil for a success calling, or lua nil when `err` return a string for a fail calling. Only works in lobby server.
 
 
 ## Configure
