@@ -3,8 +3,10 @@ package db
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/redis/go-redis/v9"
+	lua "github.com/yuin/gopher-lua"
 
 	"diceGame/config"
 	"diceGame/utils"
@@ -76,4 +78,71 @@ func InitRedis() error {
 	// Output: key value
 	// key2 does not exist
 	return nil
+}
+
+func RBDget(L *lua.LState) int {
+	utils.Logger.Debug("RBDget")
+	key := L.ToString(1)
+	utils.Logger.Debugf("key:%s", key)
+
+	runCtx, cancel := context.WithTimeout(ctx, 2000*time.Millisecond)
+	defer cancel()
+
+	_, err := RedisConn.Ping(ctx).Result()
+	if err != nil {
+		utils.Logger.Warn(err)
+		L.Push(lua.LNil)
+		L.Push(lua.LString(err.Error()))
+		return 2
+	}
+	result, err := RedisConn.Get(runCtx, key).Result()
+	if err != nil {
+		if err == redis.Nil {
+			L.Push(lua.LNil)
+			L.Push(lua.LString("redis: nil"))
+		} else {
+			utils.Logger.Warn(err)
+			L.Push(lua.LNil)
+			L.Push(lua.LString(err.Error()))
+		}
+	} else {
+		L.Push(lua.LString(result))
+		L.Push(lua.LNil)
+	}
+	return 2
+}
+
+func RBDset(L *lua.LState) int {
+	utils.Logger.Debug("RBDset")
+	key := L.ToString(1)
+	val := L.ToString(2)
+	expire := L.ToInt(3)
+	utils.Logger.Debugf("key:%s, val:%s, expire:%d", key, val, expire)
+
+	runCtx, cancel := context.WithTimeout(ctx, 2000*time.Millisecond)
+	defer cancel()
+
+	_, err := RedisConn.Ping(ctx).Result()
+	if err != nil {
+		utils.Logger.Warn(err)
+		L.Push(lua.LNil)
+		L.Push(lua.LString(err.Error()))
+		return 2
+	}
+
+	result, err := RedisConn.Set(runCtx, key, val, time.Duration(expire)*time.Second).Result()
+	if err != nil {
+		if err == redis.Nil {
+			L.Push(lua.LNil)
+			L.Push(lua.LString("redis: nil"))
+		} else {
+			utils.Logger.Warn(err)
+			L.Push(lua.LNil)
+			L.Push(lua.LString(err.Error()))
+		}
+	} else {
+		L.Push(lua.LString(result))
+		L.Push(lua.LNil)
+	}
+	return 2
 }

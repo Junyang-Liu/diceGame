@@ -2,6 +2,7 @@ package server
 
 import (
 	"diceGame/config"
+	"diceGame/db"
 	"diceGame/utils"
 	"errors"
 	"fmt"
@@ -27,6 +28,7 @@ func init() {
 const (
 	GO_STACK_NAME    = "go"
 	LOBBY_STACK_NAME = "lobby"
+	REDIS_STACK_NAME = "rdb"
 )
 
 const StartRoomId = 1000
@@ -60,6 +62,11 @@ func setLuaVmGoStack(L *lua.LState, isLobbyServer bool) {
 
 	if isLobbyServer {
 		L.SetField(goStack, "GameServerSent", L.NewFunction(GameServerSent))
+		redisStack := L.NewTypeMetatable(REDIS_STACK_NAME)
+		L.SetField(redisStack, "Get", L.NewFunction(db.RBDget))
+		L.SetField(redisStack, "Set", L.NewFunction(db.RBDset))
+		L.SetGlobal(REDIS_STACK_NAME, redisStack)
+
 	} else {
 		lobbyStack := L.NewTypeMetatable(LOBBY_STACK_NAME)
 		L.SetField(lobbyStack, "StartPlay", L.NewFunction(GameStarPlayToLobby))

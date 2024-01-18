@@ -27,6 +27,7 @@ Check here for [how it works](#how-it-works)
     - [game server](#game-server)
     - [lobby server](#lobby-server)
     - [data center server](#data-center-server)
+- [Token](#token)
 - [How it works](#how-it-works)
     - [How do `Room` works with a player request](#how-do-room-works-with-a-player-request)
     - [SequenceDiagram for the whole things](#sequencediagram-for-the-whole-things)
@@ -137,9 +138,25 @@ log: info                           # engine log level
 
 #### data center server
 ```yml
+dc:
+  addr: :8082
+  secret: dcsecret
+
+mysql:
+  debug: true
+  addr: localhost:3306
+  username: root
+  password: password
+  db: dc
+
+model: debug
+
+log: debug
 
 ```
 
+
+## Token
 
 ## How it works
 #### How do `Room` works with a player request
