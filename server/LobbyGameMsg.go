@@ -4,6 +4,7 @@ import (
 	"diceGame/config"
 	"diceGame/utils"
 	"fmt"
+	"time"
 
 	"github.com/gorilla/websocket"
 	lua "github.com/yuin/gopher-lua"
@@ -14,6 +15,8 @@ func InitLobbyRoom() {
 	NewGameVm(lobbyId, lobbyId, true)
 }
 
+const gameWsWait = 20 * time.Second
+
 func RecvGameServerMsg(conn *websocket.Conn) {
 	for {
 		msgType, message, err := conn.ReadMessage()
@@ -21,7 +24,7 @@ func RecvGameServerMsg(conn *websocket.Conn) {
 			utils.Logger.Errorf(fmt.Sprintf("game server offline %d-%s-%s-%s", msgType, conn.RemoteAddr(), message, err.Error()))
 			return
 		}
-
+		SetWsPingHandler(conn, gameWsWait)
 		DoGameServerMsg(conn, conn.RemoteAddr().String(), message)
 
 	}

@@ -231,7 +231,7 @@ func UserGetGameVm(uid int, roomId int) (*lua.LState, error) {
 		if conn == nil {
 			return nil, errors.New("conn nil")
 		}
-		err := conn.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf(`{"data":{"msg":in room %d}}`, onLineUser.RoomId)))
+		err := onLineUser.WsWriteMessage(websocket.TextMessage, []byte(fmt.Sprintf(`{"data":{"msg":in room %d}}`, onLineUser.RoomId)))
 		if err != nil {
 			return nil, err
 		}
@@ -268,7 +268,7 @@ func inGame(user *OnLineUser, op string, data any) {
 			utils.Logger.Error("conn nil")
 			return
 		}
-		err := conn.WriteMessage(websocket.TextMessage,
+		err := user.WsWriteMessage(websocket.TextMessage,
 			[]byte(fmt.Sprintf(`{"type":1, "op":"%s", "data":{"msg":"not in any room, uid: %d, must inGame before opGame, faild, data: %v", "code":-1}}`, op, user.Uid, data)))
 		if err != nil {
 			utils.Logger.Errorf(err.Error())
@@ -300,7 +300,7 @@ func opGame(user *OnLineUser, op string, data any) {
 			utils.Logger.Error("conn nil")
 			return
 		}
-		err := conn.WriteMessage(websocket.TextMessage,
+		err := user.WsWriteMessage(websocket.TextMessage,
 			[]byte(fmt.Sprintf(`{"type":2, "op":"%s", "data":{"msg":"not in any room, uid: %d, must inGame before opGame, faild, data: %v", "code":-1}}`, op, user.Uid, data)))
 		if err != nil {
 			utils.Logger.Errorf(err.Error())

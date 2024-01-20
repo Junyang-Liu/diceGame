@@ -22,8 +22,15 @@ type OnLineUser struct {
 	Name   string  `json:"name"`
 	RoomId int     `json:"room_id"`
 	InRoom bool    `json:"-"`
-	// cache Conn for close
-	WS *websocket.Conn `json:"-"`
+
+	WS     *websocket.Conn `json:"-"`
+	WSLock sync.Mutex      `json:"-"`
+}
+
+func (this *OnLineUser) WsWriteMessage(t int, raw []byte) error {
+	this.WSLock.Lock()
+	defer this.WSLock.Unlock()
+	return this.WS.WriteMessage(t, raw)
 }
 
 // TODO some Mutex are unessential
@@ -185,6 +192,10 @@ func RequestDcUser(uid int) *OnLineUser {
 }
 
 func GetOnLineUser(uid int) *OnLineUser {
+	if uid == 0 {
+		return nil
+	}
+
 	_OnLineLock.Lock()
 	if user, ok := _OnLine[uid]; ok {
 		_OnLineLock.Unlock()
@@ -193,6 +204,11 @@ func GetOnLineUser(uid int) *OnLineUser {
 	_OnLineLock.Unlock()
 
 	return nil
+}
+
+func GetOnLineUserByAddr(addr string) *OnLineUser {
+	uid := GetOnLineUID(addr)
+	return GetOnLineUser(uid)
 }
 
 func CacheOnLineUID(uid int, conn *websocket.Conn) bool {
@@ -251,7 +267,12 @@ func UserSend(L *lua.LState) int {
 	res, _ := json.Marshal(respMsg)
 
 	utils.Logger.Debugf(fmt.Sprintf("res: %s", res))
-	err := conn.WriteMessage(websocket.TextMessage, res)
+	user := GetOnLineUserByAddr(conn.RemoteAddr().String())
+	if user == nil {
+		utils.Logger.Errorf(fmt.Sprintf("UserSend get user nil RemoteAddr:%s", conn.RemoteAddr()))
+		return 0
+	}
+	err := user.WsWriteMessage(websocket.TextMessage, res)
 	if err != nil {
 		utils.Logger.Errorf(err.Error())
 		// L.Push(lua.LBool(false))

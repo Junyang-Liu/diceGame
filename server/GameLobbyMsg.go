@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"net/url"
+	"sync"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -14,6 +15,9 @@ import (
 )
 
 var LobbyWS *websocket.Conn
+var LobbyWSLock sync.Mutex
+
+const lobbyWsWait = 10 * time.Second
 
 func InitClientToLobby() bool {
 	if config.CFG.Model == "debug" {
@@ -42,6 +46,18 @@ func InitClientToLobby() bool {
 			DoLobbyMsg(message)
 		}
 	}()
+	go func() {
+		for {
+			LobbyWSLock.Lock()
+			err := c.WriteMessage(websocket.PingMessage, []byte{})
+			LobbyWSLock.Unlock()
+			if err != nil {
+				log.Println("PingMessage:", err)
+				return
+			}
+			time.Sleep(lobbyWsWait)
+		}
+	}()
 
 	msg := &LobbyMsg{FastLabel: EnumNewGameServer,
 		Msg: []byte(fmt.Sprintf(`{"game_addr":"%s/dice"}`, config.CFG.Server.Addr))}
@@ -56,7 +72,7 @@ func ReConnectToLobby() {
 			utils.Logger.Warn("ReConnectToLobby success")
 			return
 		} else {
-			time.Sleep(2000 * time.Millisecond)
+			time.Sleep(5 * time.Second)
 		}
 	}
 }
@@ -147,10 +163,12 @@ func SentToLobby(msg *LobbyMsg) {
 	msg.GameID = config.CFG.Server.GameID
 	msg.Priority = config.CFG.Server.Priority
 
+	LobbyWSLock.Lock()
 	utils.Logger.Debugf("SentToLobby msg:%v", *msg)
 	if err := LobbyWS.WriteJSON(*msg); err != nil {
 		utils.Logger.Error("SentToLobby  err:", err)
 	}
+	LobbyWSLock.Unlock()
 }
 
 func UserLeaveToLobby(roomId, uid int) {
