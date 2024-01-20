@@ -3,6 +3,7 @@ package server
 import (
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/gorilla/websocket"
 
@@ -38,8 +39,11 @@ func (msgCell *MsgCell) String() string {
 	)
 }
 
+const PING = "PING"
+
 func RecvMsg(conn *websocket.Conn) {
 	SetWsCloseHandler(conn)
+	SetWsPingHandler(conn, wsWait)
 
 	var user *OnLineUser
 	uid := GetOnLineUID(conn.RemoteAddr().String())
@@ -55,7 +59,19 @@ func RecvMsg(conn *websocket.Conn) {
 			return
 		}
 
-		utils.Logger.Debug(fmt.Sprintf("%d %s %s", msgType, conn.RemoteAddr(), raw))
+		utils.Logger.Debug(fmt.Sprintf("msgType:%d RemoteAddr:%s raw:%s", msgType, conn.RemoteAddr(), raw))
+		if msgType != websocket.TextMessage {
+			utils.Logger.Errorf("unsuport msgType:%d, RemoteAddr:%s", msgType, conn.RemoteAddr())
+			UserOffLine(conn.RemoteAddr().String())
+			return
+		}
+
+		// https://stackoverflow.com/questions/10585355/sending-websocket-ping-pong-frame-from-browser
+		// it looks like js or browser can't sending a ping/pong frame
+		if fmt.Sprintf("%s", raw[:]) == PING {
+			TextPingHandler(conn, wsWait)
+			continue
+		}
 
 		newMsg := Msg{}
 
@@ -83,7 +99,7 @@ func DoLogin(conn *websocket.Conn, msg *Msg) *OnLineUser {
 			return nil
 		} else {
 			retStr, _ := json.Marshal(ret)
-			err := conn.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf(`{"type":1, "op":"login", "data":{"msg":"login success", "code":0, "user":%s}}`, []byte(retStr))))
+			err := ret.WsWriteMessage(websocket.TextMessage, []byte(fmt.Sprintf(`{"type":1, "op":"login", "data":{"msg":"login success", "code":0, "user":%s}}`, []byte(retStr))))
 			if err != nil {
 				utils.Logger.Error(err.Error())
 				return nil
@@ -105,6 +121,40 @@ func SetWsCloseHandler(conn *websocket.Conn) {
 		UserOffLine(conn.RemoteAddr().String())
 		return nil
 	})
+}
+
+const wsWait = 10 * time.Second
+
+func SetWsPingHandler(conn *websocket.Conn, wait time.Duration) {
+	conn.SetReadDeadline(time.Now().Add(wait))
+	conn.SetWriteDeadline(time.Now().Add(wait))
+
+	conn.SetPingHandler(func(appData string) error {
+		utils.Logger.Debugf("conn ping RemoteAddr:%s", conn.RemoteAddr())
+		conn.SetReadDeadline(time.Now().Add(wait))
+		conn.SetWriteDeadline(time.Now().Add(wait))
+		if user := GetOnLineUserByAddr(conn.RemoteAddr().String()); user != nil {
+			if err := user.WsWriteMessage(websocket.PongMessage, []byte{}); err != nil {
+				utils.Logger.Error(err)
+			}
+		} else if err := conn.WriteMessage(websocket.PongMessage, []byte{}); err != nil {
+			utils.Logger.Error(err)
+		}
+		return nil
+	})
+}
+
+func TextPingHandler(conn *websocket.Conn, wait time.Duration) {
+	utils.Logger.Debugf("conn ping RemoteAddr:%s", conn.RemoteAddr())
+	conn.SetReadDeadline(time.Now().Add(wait))
+	conn.SetWriteDeadline(time.Now().Add(wait))
+	if user := GetOnLineUserByAddr(conn.RemoteAddr().String()); user != nil {
+		if err := user.WsWriteMessage(websocket.PongMessage, []byte{}); err != nil {
+			utils.Logger.Error(err)
+		}
+	} else if err := conn.WriteMessage(websocket.PongMessage, []byte{}); err != nil {
+		utils.Logger.Error(err)
+	}
 }
 
 func MsgCache(user *OnLineUser, msg *Msg) {

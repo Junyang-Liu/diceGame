@@ -28,7 +28,7 @@ func DoSysCommand(user *OnLineUser, op string, data any, gameOp string) {
 
 	conn := user.WS
 	if conn != nil {
-		conn.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("not support op:%s", op)))
+		user.WsWriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("not support op:%s", op)))
 	} else {
 		utils.Logger.Errorf(fmt.Sprintf("not found conn uid: %d", user.Uid))
 	}
@@ -43,7 +43,7 @@ func newGame(user *OnLineUser, op string, data any, gameOp string) {
 
 	if user.RoomId != 0 {
 		if user.WS != nil {
-			if err := user.WS.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("already in room: %d", user.RoomId))); err != nil {
+			if err := user.WsWriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("already in room: %d", user.RoomId))); err != nil {
 				utils.Logger.Errorf(err.Error())
 			}
 		} else {
@@ -59,7 +59,7 @@ func newGame(user *OnLineUser, op string, data any, gameOp string) {
 	respMsg := Msg{MsgType: SysType, Op: op + "Rsp", Data: retData}
 	res, _ := json.Marshal(respMsg)
 	if user.WS != nil {
-		if err := user.WS.WriteMessage(websocket.TextMessage, res); err != nil {
+		if err := user.WsWriteMessage(websocket.TextMessage, res); err != nil {
 			utils.Logger.Errorf(err.Error())
 		}
 	} else {

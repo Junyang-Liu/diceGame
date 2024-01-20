@@ -40,7 +40,7 @@ func main() {
 			}
 		}
 	}()
-
+	ping(c)
 	err = c.WriteMessage(websocket.TextMessage, []byte(`{"op":"login","type":1, "data":100001}`))
 	if err != nil {
 		log.Println("write:", err)
@@ -71,6 +71,7 @@ func main() {
 
 	time.Sleep(1 * time.Second)
 
+	ping(c)
 	err = c.WriteMessage(websocket.TextMessage, []byte(`{"op":"getAllGame","type":2,"data":{"test":666}}`))
 	if err != nil {
 		log.Println("write close:", err)
@@ -97,11 +98,21 @@ func main() {
 
 	game()
 
+	ping(c)
 	time.Sleep(5 * time.Second)
 	// time.Millisecond
 	// isfinish = true
 	select {}
 
+}
+
+func ping(c *websocket.Conn) {
+	err := c.WriteMessage(websocket.PingMessage, []byte{})
+	log.Println("ping it")
+	if err != nil {
+		log.Println("ping:", err)
+		return
+	}
 }
 
 func game() {
@@ -144,15 +155,20 @@ func game() {
 
 	time.Sleep(1 * time.Second)
 
+	ping(c)
 	err = c.WriteMessage(websocket.TextMessage, []byte(`{"op":"inGame","type":2, "data":666661}`))
 	if err != nil {
 		log.Println("write close:", err)
 		return
 	}
 
+	ping(c)
 	time.Sleep(5 * time.Second)
 	// time.Millisecond
 	// isfinish = true
-	select {}
+	for {
+		ping(c)
+		time.Sleep(5 * time.Second)
+	}
 
 }
